@@ -465,5 +465,79 @@ public class LikeButton extends FrameLayout implements View.OnClickListener {
 
         setEffectsViewSize();
     }
+    
+    public void like() {
+        isChecked = true;
+
+        icon.setImageDrawable(isChecked ? likeDrawable : unLikeDrawable);
+
+        if (likeListener != null) {
+            if (isChecked) {
+                likeListener.liked(this);
+            } else {
+                likeListener.unLiked(this);
+            }
+        }
+
+        if (animatorSet != null) {
+            animatorSet.cancel();
+        }
+
+        if (isChecked) {
+            icon.animate().cancel();
+            icon.setScaleX(0);
+            icon.setScaleY(0);
+            circleView.setInnerCircleRadiusProgress(0);
+            circleView.setOuterCircleRadiusProgress(0);
+            dotsView.setCurrentProgress(0);
+
+            animatorSet = new AnimatorSet();
+
+            ObjectAnimator outerCircleAnimator = ObjectAnimator.ofFloat(circleView, CircleView.OUTER_CIRCLE_RADIUS_PROGRESS, 0.1f, 1f);
+            outerCircleAnimator.setDuration(250);
+            outerCircleAnimator.setInterpolator(DECCELERATE_INTERPOLATOR);
+
+            ObjectAnimator innerCircleAnimator = ObjectAnimator.ofFloat(circleView, CircleView.INNER_CIRCLE_RADIUS_PROGRESS, 0.1f, 1f);
+            innerCircleAnimator.setDuration(200);
+            innerCircleAnimator.setStartDelay(200);
+            innerCircleAnimator.setInterpolator(DECCELERATE_INTERPOLATOR);
+
+            ObjectAnimator starScaleYAnimator = ObjectAnimator.ofFloat(icon, ImageView.SCALE_Y, 0.2f, 1f);
+            starScaleYAnimator.setDuration(350);
+            starScaleYAnimator.setStartDelay(250);
+            starScaleYAnimator.setInterpolator(OVERSHOOT_INTERPOLATOR);
+
+            ObjectAnimator starScaleXAnimator = ObjectAnimator.ofFloat(icon, ImageView.SCALE_X, 0.2f, 1f);
+            starScaleXAnimator.setDuration(350);
+            starScaleXAnimator.setStartDelay(250);
+            starScaleXAnimator.setInterpolator(OVERSHOOT_INTERPOLATOR);
+
+            ObjectAnimator dotsAnimator = ObjectAnimator.ofFloat(dotsView, DotsView.DOTS_PROGRESS, 0, 1f);
+            dotsAnimator.setDuration(900);
+            dotsAnimator.setStartDelay(50);
+            dotsAnimator.setInterpolator(ACCELERATE_DECELERATE_INTERPOLATOR);
+
+            animatorSet.playTogether(
+                    outerCircleAnimator,
+                    innerCircleAnimator,
+                    starScaleYAnimator,
+                    starScaleXAnimator,
+                    dotsAnimator
+            );
+
+            animatorSet.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    circleView.setInnerCircleRadiusProgress(0);
+                    circleView.setOuterCircleRadiusProgress(0);
+                    dotsView.setCurrentProgress(0);
+                    icon.setScaleX(1);
+                    icon.setScaleY(1);
+                }
+            });
+
+            animatorSet.start();
+        }
+    }
 
 }
